@@ -18,6 +18,12 @@ public class MongoDbService {
     }
 
     public void CreateUser(UserModel user) {
+        var existingUser = _users.Find(u => u.Email == user.Email).FirstOrDefault();
+
+        if (existingUser != null) {
+            throw new InvalidOperationException("Email is already in use.");
+        }
+
         _users.InsertOne(user);
     }
 }

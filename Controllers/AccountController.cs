@@ -5,21 +5,19 @@ using WattWatch.Services;
 
 namespace WattWatch.Controllers {
     public class AccountController : Controller {
-        private readonly MongoDbService _mongoDbService;
+        private MongoDbService _mongoDbService;
 
         public IActionResult Index() {
             return View("Login");
         }
 
-        public IActionResult Register() {
-            return View();
-        }
-
         public IActionResult Login(UserModel model) {
+            _mongoDbService = new MongoDbService();
+
             var user = _mongoDbService.Authenticate(model.Email, model.Password);
 
             if (user != null) {
-                HttpContext.Session.SetString("UserId", model.Id);
+                HttpContext.Session.SetString("UserId", user.Id.ToString());
 
                 return RedirectToAction("Index", "Home");
             }
@@ -28,8 +26,16 @@ namespace WattWatch.Controllers {
             return View(model);
         }
 
+        public IActionResult Logout() {
+            HttpContext.Session.Clear();
+
+            return RedirectToAction("Index", "Home");
+        }
+
         [HttpPost]
         public IActionResult Register(RegisterModel model) {
+            _mongoDbService = new MongoDbService();
+
             if (!ModelState.IsValid) {
                 return View(model);
             }
