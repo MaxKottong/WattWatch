@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Driver;
 using System.Diagnostics;
 using WattWatch.Models;
 
@@ -15,6 +16,14 @@ namespace WattWatch.Controllers {
         }
 
         public IActionResult Privacy() {
+            return View();
+        }
+
+        public IActionResult Login() {
+            return View();
+        }
+
+        public IActionResult Register() {
             return View();
         }
 

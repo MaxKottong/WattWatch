@@ -1,0 +1,27 @@
+﻿@{
+    ViewData["Title"] = "Register";
+}
+
+<form class="w-50">
+    <div class="mb-3">
+        <label for="firstName" class="form-label">First Name</label>
+        <input type="text" class="form-control" id="firstName" aria-describedby="firstName">
+    </div>
+    <div class="mb-3">
+        <label for="LastName" class="form-label">Last Name</label>
+        <input type="text" class="form-control" id="LastName" aria-describedby="LastName">
+    </div>
+    <div class="mb-3">
+        <label for="email" class="form-label">Email address</label>
+        <input type="email" class="form-control" id="email" aria-describedby="email">
+    </div>
+    <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" id="password">
+    </div>
+    <div class="mb-3">
+        <label for="passwordConfirm" class="form-label">Re-enter Password</label>
+        <input type="password" class="form-control" id="passwordConfirm">
+    </div>
+    <button type="submit" class="btn btn-primary">Create Account</button>
+</form>
