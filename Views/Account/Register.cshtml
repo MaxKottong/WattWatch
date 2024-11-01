@@ -2,26 +2,35 @@
     ViewData["Title"] = "Register";
 }
 
-<form class="w-50">
+@model WattWatch.Models.RegisterModel
+
+<h2>Create an Account</h2>
+
+@using (Html.BeginForm("Register", "Account", FormMethod.Post, new { @class = "w-50" })) {
     <div class="mb-3">
         <label for="firstName" class="form-label">First Name</label>
-        <input type="text" class="form-control" id="firstName" aria-describedby="firstName">
+        @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control", id = "firstName" })
+        @Html.ValidationMessageFor(m => m.FirstName, "", new { @class = "text-danger" })
     </div>
     <div class="mb-3">
-        <label for="LastName" class="form-label">Last Name</label>
-        <input type="text" class="form-control" id="LastName" aria-describedby="LastName">
+        <label for="lastName" class="form-label">Last Name</label>
+        @Html.TextBoxFor(m => m.LastName, new { @class = "form-control", id = "LastName" })
+        @Html.ValidationMessageFor(m => m.LastName, "", new { @class = "text-danger" })
     </div>
     <div class="mb-3">
         <label for="email" class="form-label">Email address</label>
-        <input type="email" class="form-control" id="email" aria-describedby="email">
+        @Html.TextBoxFor(m => m.Email, new { @class = "form-control", id = "email" })
+        @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
     </div>
     <div class="mb-3">
         <label for="password" class="form-label">Password</label>
-        <input type="password" class="form-control" id="password">
+        @Html.PasswordFor(m => m.Password, new { @class = "form-control", id = "password" })
+        @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
     </div>
     <div class="mb-3">
         <label for="passwordConfirm" class="form-label">Re-enter Password</label>
-        <input type="password" class="form-control" id="passwordConfirm">
+        @Html.PasswordFor(m => m.PasswordConfirm, new { @class = "form-control", id = "passwordConfirm" })
+        @Html.ValidationMessageFor(m => m.PasswordConfirm, "", new { @class = "text-danger" })
     </div>
     <button type="submit" class="btn btn-primary">Create Account</button>
-</form>
+}
