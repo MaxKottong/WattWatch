@@ -1,17 +1,40 @@
-﻿@model WattWatch.ViewModel.Dashboard.DashboardViewModel
+﻿@using System.Globalization
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model WattWatch.ViewModel.Dashboard.DashboardViewModel
+
+@{
+    var entriesByMonth = Model.UserEntries
+        .GroupBy(entry => entry.Timestamp.Month)
+        .OrderBy(group => group.Key)
+        .ToDictionary(group => group.Key, group => group.ToList());
+
+    var monthNames = CultureInfo.CurrentCulture.DateTimeFormat.MonthNames;
+}
 
 <div class="text-center">
     <h1 class="display-4">Dashboard</h1>
 
     @if (Model.HasEntries) {
         <h2>Your Entries:</h2>
-        <ul>
-            @foreach (var entry in Model.UserEntries) {
-                <li>
-                    Energy Usage: @entry.EnergyUsage kWh, Date: @entry.Timestamp.ToShortDateString()
-                </li>
-            }
-        </ul>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createEntryModal">
+            Create New Entry
+        </button>
+
+        @foreach (var month in entriesByMonth.Keys) {
+            <div class="card" style="width: 18rem; margin-bottom: 1rem;">
+                <div class="card-body">
+                    <h5 class="card-title">@monthNames[month - 1]</h5> <!-- Month name -->
+                    <h6 class="card-subtitle mb-2 text-muted">Entries for @monthNames[month - 1]</h6>
+                    <ul class="list-group list-group-flush">
+                        @foreach (var entry in entriesByMonth[month]) {
+                            <li class="list-group-item">
+                                Energy Usage: @entry.EnergyUsage kWh, Date: @entry.Timestamp.ToShortDateString()
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
     }
     else {
         <p>No entries found for your account.</p>
@@ -26,16 +49,58 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+                <h1 class="modal-title fs-5" id="createEntryModalLabel">Create Energy Entry</h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                ...
+                <form id="createEntryForm">
+                    <div class="mb-3">
+                        <label for="energyUsage" class="form-label">Energy Usage (kWh)</label>
+                        <input type="number" class="form-control" id="energyUsage" name="energyUsage" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="entryDate" class="form-label">Entry Date</label>
+                        <input type="date" class="form-control" id="entryDate" name="entryDate" required>
+                    </div>
+                </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary">Save changes</button>
+                <button type="button" class="btn btn-primary" id="saveEntryButton">Save Entry</button>
             </div>
         </div>
     </div>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#saveEntryButton').on('click', function () {
+            var energyUsage = $('#energyUsage').val();
+            var entryDate = $('#entryDate').val();
+
+            if (!energyUsage || !entryDate) {
+                alert("Please fill in all fields.");
+                return;
+            }
+
+            var newEntry = {
+                EnergyUsage: parseFloat(energyUsage),
+                Timestamp: new Date(entryDate)
+            };
+
+            $.ajax({
+                url: '@Url.Action("CreateEntry", "Entry")',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(newEntry),
+                success: function (response) {
+                    location.reload();
+                },
+                error: function (xhr, status, error) {
+                    alert("Error: " + error);
+                }
+            });
+        });
+    });
+</script>

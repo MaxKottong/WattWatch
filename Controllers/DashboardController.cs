@@ -9,7 +9,7 @@ namespace WattWatch.Controllers {
         private MongoDbService _mongoDbService;
 
         public IActionResult Index() {
-            if (HttpContext.Session.GetString("UserId") != null) {
+            if (User.Identity.IsAuthenticated) {
                 var email = User.Identity.Name;
 
                 var entries = GetUserEntries(email);

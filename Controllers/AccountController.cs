@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using WattWatch.Models;
@@ -24,9 +27,17 @@ namespace WattWatch.Controllers {
             var user = Authenticate(model.Email, model.Password);
 
             if (user != null) {
-                HttpContext.Session.SetString("UserId", user.Id.ToString());
+                var claims = new List<Claim> {
+                    new Claim(ClaimTypes.Name, user.Email),
+                    new Claim("UserId", user.Id.ToString()),
+                    new Claim("FirstName", user.FirstName)
+                };
 
-                return RedirectToAction("Index", "Home");
+                var claimsIdentity = new ClaimsIdentity(claims, "login");
+                var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+                HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal).Wait();
+
+                return RedirectToAction("Index", "Dashboard");
             }
 
             ModelState.AddModelError("", "Invalid username or password.");
@@ -34,7 +45,7 @@ namespace WattWatch.Controllers {
         }
 
         public IActionResult Logout() {
-            HttpContext.Session.Clear();
+            HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme).Wait();
 
             return RedirectToAction("Index", "Home");
         }
