@@ -15,26 +15,31 @@
     <h1 class="display-4">Dashboard</h1>
 
     @if (Model.HasEntries) {
-        <h2>Your Entries:</h2>
+        <h2>Your Total Yearly Energy Usage: @Model.TotalEnergyUsed kWh</h2>
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createEntryModal">
             Create New Entry
         </button>
 
-        @foreach (var month in entriesByMonth.Keys) {
-            <div class="card" style="width: 18rem; margin-bottom: 1rem;">
-                <div class="card-body">
-                    <h5 class="card-title">@monthNames[month - 1]</h5> <!-- Month name -->
-                    <h6 class="card-subtitle mb-2 text-muted">Entries for @monthNames[month - 1]</h6>
-                    <ul class="list-group list-group-flush">
-                        @foreach (var entry in entriesByMonth[month]) {
-                            <li class="list-group-item">
-                                Energy Usage: @entry.EnergyUsage kWh, Date: @entry.Timestamp.ToShortDateString()
-                            </li>
-                        }
-                    </ul>
+        <div class="d-flex flex-wrap justify-content-center mt-4">
+            @foreach (var month in entriesByMonth.Keys) {
+                <div class="card mx-2" style="width: 18rem; margin-bottom: 1rem;">
+                    <div class="card-body">
+                        <h5 class="card-title">@monthNames[month - 1]</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">Entries for @monthNames[month - 1]</h6>
+                        <ul class="list-group list-group-flush">
+                            @foreach (var entry in entriesByMonth[month]) {
+                                <li class="list-group-item">
+                                    Energy Usage: @entry.EnergyUsage kWh, Date: @entry.Timestamp.ToShortDateString()
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                    <div class="card-footer">
+                        <h6>Total Energy Usage: @entriesByMonth[month].Sum(e => e.EnergyUsage) kWh</h6>
+                    </div>
                 </div>
-            </div>
-        }
+            }
+        </div>
     }
     else {
         <p>No entries found for your account.</p>
