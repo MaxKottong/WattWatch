@@ -1,20 +1,27 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Driver;
 using WattWatch.Models;
 using WattWatch.Services;
 
 namespace WattWatch.Controllers {
     public class AccountController : Controller {
-        private MongoDbService _mongoDbService;
+        private readonly MongoDbService _mongoDbService;
+
+        public AccountController() {
+            _mongoDbService = new MongoDbService();
+        }
 
         public IActionResult Index() {
             return View("Login");
         }
 
-        public IActionResult Login(UserModel model) {
-            _mongoDbService = new MongoDbService();
+        public IActionResult Register() {
+            return View();
+        }
 
-            var user = _mongoDbService.Authenticate(model.Email, model.Password);
+        public IActionResult Login(UserModel model) {
+            var user = Authenticate(model.Email, model.Password);
 
             if (user != null) {
                 HttpContext.Session.SetString("UserId", user.Id.ToString());
@@ -34,8 +41,6 @@ namespace WattWatch.Controllers {
 
         [HttpPost]
         public IActionResult Register(RegisterModel model) {
-            _mongoDbService = new MongoDbService();
-
             if (!ModelState.IsValid) {
                 return View(model);
             }
@@ -52,9 +57,27 @@ namespace WattWatch.Controllers {
                 Password = model.Password
             };
 
-            _mongoDbService.CreateUser(user);
+            CreateUser(user);
 
             return RedirectToAction("Login", "Account");
+        }
+
+        public UserModel Authenticate(string email, string password) {
+            var users = _mongoDbService.GetUserCollection();
+
+            return users.Find(user => user.Email == email && user.Password == password).FirstOrDefault();
+        }
+
+        public void CreateUser(UserModel user) {
+            var users = _mongoDbService.GetUserCollection();
+
+            var existingUser = users.Find(u => u.Email == user.Email).FirstOrDefault();
+
+            if (existingUser != null) {
+                throw new InvalidOperationException("Email is already in use.");
+            }
+
+            users.InsertOne(user);
         }
     }
 }
