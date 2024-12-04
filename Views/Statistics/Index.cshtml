@@ -1,0 +1,51 @@
+﻿@using System.Globalization
+@model WattWatch.ViewModel.Dashboard.DashboardViewModel
+
+@{
+    ViewData["Title"] = "Statistics";
+    var monthlyUsage = Model.MonthlyEnergyUsage
+        .OrderBy(kvp => DateTime.ParseExact(kvp.Key, "yyyy-MM", CultureInfo.InvariantCulture));
+    var monthLabels = monthlyUsage
+        .Select(kvp => DateTime.ParseExact(kvp.Key, "yyyy-MM", CultureInfo.InvariantCulture).ToString("MMMM"))
+        .ToList();
+
+    var energyUsageData = monthlyUsage.Select(kvp => kvp.Value).ToList();
+}
+
+<h1 class="display-4 text-center">Monthly Energy Usage Statistics</h1>
+
+<div class="container mt-4">
+    <canvas id="cvs" width="600" height="400">[No canvas support]</canvas>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.EnergySavingTips)) {
+    <div class="mt-4 p-3 bg-warning text-dark rounded">
+        <h3>Energy Saving Tips</h3>
+        <p>@Model.EnergySavingTips</p>
+    </div>
+}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/rgraph/6.03/RGraph.common.core.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/rgraph/6.03/RGraph.bar.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var data = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(energyUsageData));
+        var labels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(monthLabels));
+
+        new RGraph.Bar({
+            id: 'cvs',
+            data: data,
+            options: {
+                xaxisLabels: labels,
+                gutterBottom: 100,
+                textSize: 10,
+                colors: ['#3498db'],
+                yaxis: true,
+                yaxisLabels: true,
+                gutterLeft: 50,
+                gutterRight: 20
+            }
+        }).draw();
+    });
+</script>

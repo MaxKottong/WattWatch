@@ -3,6 +3,8 @@
 @model WattWatch.ViewModel.Dashboard.DashboardViewModel
 
 @{
+    ViewData["Title"] = "Dashboard";
+
     var entriesByMonth = Model.UserEntries
         .GroupBy(entry => entry.Timestamp.Month)
         .OrderBy(group => group.Key)
@@ -30,7 +32,14 @@
                             @foreach (var entry in entriesByMonth[month]) {
                                 <li class="list-group-item">
                                     Energy Usage: @entry.EnergyUsage kWh, Date: @entry.Timestamp.ToShortDateString()
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="openEditModal('@entry.Id', '@entry.EnergyUsage', '@entry.Timestamp')">
+                                        Edit
+                                    </button>
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteEntry('@entry.Id')">
+                                        Delete
+                                    </button>
                                 </li>
+
                             }
                         </ul>
                     </div>
@@ -57,55 +66,77 @@
                 <h1 class="modal-title fs-5" id="createEntryModalLabel">Create Energy Entry</h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <form id="createEntryForm">
+            <form method="post" action="@Url.Action("CreateEntry", "Entry")">
+                <div class="modal-body">
                     <div class="mb-3">
                         <label for="energyUsage" class="form-label">Energy Usage (kWh)</label>
-                        <input type="number" class="form-control" id="energyUsage" name="energyUsage" required>
+                        <input type="number" class="form-control" id="energyUsage" name="EnergyUsage" required>
                     </div>
                     <div class="mb-3">
                         <label for="entryDate" class="form-label">Entry Date</label>
-                        <input type="date" class="form-control" id="entryDate" name="entryDate" required>
+                        <input type="date" class="form-control" id="entryDate" name="Timestamp" required>
                     </div>
-                </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary" id="saveEntryButton">Save Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editEntryModal" tabindex="-1" aria-labelledby="editEntryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editEntryModalLabel">Edit Entry</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="saveEntryButton">Save Entry</button>
-            </div>
+            <form method="post" action="@Url.Action("UpdateEntry", "Entry")">
+                <div class="modal-body">
+                    <input type="hidden" id="entryId" name="Id">
+                    <div class="mb-3">
+                        <label for="editEnergyUsage" class="form-label">Energy Usage (kWh)</label>
+                        <input type="number" class="form-control" id="editEnergyUsage" name="EnergyUsage">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editTimestamp" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="editTimestamp" name="Timestamp">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    $(document).ready(function () {
-        $('#saveEntryButton').on('click', function () {
-            var energyUsage = $('#energyUsage').val();
-            var entryDate = $('#entryDate').val();
+    function openEditModal(id, energyUsage, timestamp) {
+        $('#entryId').val(id);
+        $('#editEnergyUsage').val(energyUsage);
+        $('#editTimestamp').val(new Date(timestamp).toISOString().split('T')[0]);
+        $('#editEntryModal').modal('show');
+    }
 
-            if (!energyUsage || !entryDate) {
-                alert("Please fill in all fields.");
-                return;
+    function deleteEntry(id) {
+        if (!confirm("Are you sure you want to delete this entry?")) {
+            return;
+        }
+
+        $.ajax({
+            url: '@Url.Action("DeleteEntry", "Entry")',
+            type: 'DELETE',
+            data: { id: id },
+            success: function () {
+                location.reload();
+            },
+            error: function (xhr, status, error) {
+                alert("Error: " + error);
             }
-
-            var newEntry = {
-                EnergyUsage: parseFloat(energyUsage),
-                Timestamp: new Date(entryDate)
-            };
-
-            $.ajax({
-                url: '@Url.Action("CreateEntry", "Entry")',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(newEntry),
-                success: function (response) {
-                    location.reload();
-                },
-                error: function (xhr, status, error) {
-                    alert("Error: " + error);
-                }
-            });
         });
-    });
+    }
+
+
 </script>

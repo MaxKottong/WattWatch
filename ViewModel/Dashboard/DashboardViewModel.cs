@@ -8,4 +8,5 @@ public class DashboardViewModel {
     public string Email { get; set; }
     public double TotalEnergyUsed { get; set; }
     public Dictionary<string, double> MonthlyEnergyUsage { get; set; }
+    public string EnergySavingTips { get; set; }
 }
