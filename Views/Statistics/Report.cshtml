@@ -1,0 +1,75 @@
+﻿@using System.Globalization
+@model WattWatch.ViewModel.Dashboard.DashboardViewModel
+
+@{
+    var monthlyUsage = Model.MonthlyEnergyUsage
+        .OrderBy(kvp => DateTime.ParseExact(kvp.Key, "yyyy-MM", CultureInfo.InvariantCulture));
+    var monthLabels = monthlyUsage
+        .Select(kvp => DateTime.ParseExact(kvp.Key, "yyyy-MM", CultureInfo.InvariantCulture).ToString("MMMM"))
+        .ToList();
+
+    var energyUsageData = monthlyUsage.Select(kvp => kvp.Value).ToList();
+}
+
+<div class="text-center">
+    <h1 class="display-4">Energy Report</h1>
+
+    @if (Model.HasEntries) {
+        <h2>Total Energy Usage This Year: @Model.TotalEnergyUsed kWh</h2>
+        <div class="container mt-4">
+            <canvas id="cvs" width="600" height="400">[No canvas support]</canvas>
+        </div>
+
+        <div class="d-flex flex-wrap justify-content-center mt-4">
+            @foreach (var monthGroup in Model.UserEntries.GroupBy(e => e.Timestamp.Month).OrderBy(g => g.Key)) {
+                <div class="card mx-2" style="width: 18rem; margin-bottom: 1rem;">
+                    <div class="card-body">
+                        <h5 class="card-title">@CultureInfo.CurrentCulture.DateTimeFormat.MonthNames[monthGroup.Key - 1]</h5>
+                        <ul class="list-group list-group-flush">
+                            @foreach (var entry in monthGroup) {
+                                <li class="list-group-item">
+                                    @entry.Timestamp.ToShortDateString() - @entry.EnergyUsage kWh
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                    <div class="card-footer">
+                        Total: @monthGroup.Sum(e => e.EnergyUsage) kWh
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.EnergySavingTips)) {
+            <div class="mt-4 p-3 bg-warning text-dark rounded">
+                <h3>Energy Saving Tips</h3>
+                <p>@Model.EnergySavingTips</p>
+            </div>
+        }
+    }
+    else {
+        <p>No energy usage data available. Start by adding some entries.</p>
+    }
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var data = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(energyUsageData));
+        var labels = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(monthLabels));
+
+        new RGraph.Bar({
+            id: 'cvs',
+            data: data,
+            options: {
+                xaxisLabels: labels,
+                gutterBottom: 100,
+                textSize: 10,
+                colors: ['#3498db'],
+                yaxis: true,
+                yaxisLabels: true,
+                gutterLeft: 50,
+                gutterRight: 20
+            }
+        }).draw();
+    });
+</script>

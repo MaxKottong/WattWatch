@@ -67,5 +67,27 @@ namespace WattWatch.Controllers {
         private double CalculateTotalEnergyUsed(List<UsageModel> entries) {
             return entries.Sum(entry => entry.EnergyUsage);
         }
+
+        public IActionResult Report() {
+            if (User.Identity.IsAuthenticated) {
+                var email = User.Identity.Name;
+                var entries = GetUserEntries(email);
+                var monthlyEnergyUsage = CalculateMonthlyEnergyUsage(entries);
+                var totalEnergyUsed = CalculateTotalEnergyUsed(entries);
+                var energySavingTips = GetEnergySavingTips(monthlyEnergyUsage);
+
+                var viewModel = new DashboardViewModel {
+                    UserEntries = entries,
+                    MonthlyEnergyUsage = monthlyEnergyUsage,
+                    TotalEnergyUsed = totalEnergyUsed,
+                    Email = email,
+                    EnergySavingTips = energySavingTips
+                };
+
+                return View(viewModel);
+            }
+
+            return RedirectToAction("Index", "Home");
+        }
     }
 }
